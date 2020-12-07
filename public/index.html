@@ -1,0 +1,147 @@
+<html>
+    <head>
+        <title>Real Estate Predictor</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    </head>
+    <body>
+        <div class="jumbotron text-center">
+            <h1>Real Estate Predictor for New Jersey</h1>
+            <p>Find estimated price of a house by giving us some information! (Requires at least one field filled in)</p>
+        </div>
+        <div class="form w-50 m-auto">
+            <div class="row">
+                <div class="col-md">
+                    <label for="zip-code">Zip code that the house is located in (Optional)</label>
+                    <div class="input-group mb-3">
+                        <input type="number" class="form-control" placeholder="07701" id="zip-code">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md">
+                    <label for="beds">Amount of bedrooms in the house (Optional)</label>
+                    <div class="input-group mb-3">
+                        <input type="number" class="form-control" placeholder="3" id="beds">
+                    </div>
+                </div>
+                <div class="col-md">
+                    <label for="baths">Amount of bathrooms in the house (Optional)</label>
+                    <div class="input-group mb-3">
+                        <input type="number" class="form-control" placeholder="2" id="baths">
+                    </div>
+                </div>
+                <div class="col-md">
+                    <label for="sqft">Amount of square feet in the house (Optional)</label>
+                    <div class="input-group mb-3">
+                        <input type="number" class="form-control" placeholder="1221" id="sqft">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md">
+                    <button class="btn btn-primary d-block m-auto" type="button" onclick="executeEstimate()">Get Estimated House Price</button>
+                </div>
+            </div>
+        </div>
+        <div id="result" class="row w-50 m-auto" style="display: none;">
+            <div class="col-md">
+                <p class="text-center">Estimate: </p>
+                <p class="text-center answer"></p>
+                <p>Were you searching to see the estimated value of a real home? Is this an accurate price of that home? If not please enter the proper value:</p>
+                <div class="row">
+                    <input type="number" class="form-control" id="correct_price">
+                    <button class="btn btn-primary d-block m-auto" onclick="executeCorrection()">Submit</button>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md">
+                <p class="text-center final" style="display: none;">Thank You for submitting a price correction!</p>
+            </div>
+        </div>
+    </body>
+</html>
+
+<script type="text/javascript">
+    function executeCorrection() {
+        let price = $('#correct_price').val();
+        let zip = $('#zip-code').val();
+        let beds = $('#beds').val();
+        let baths = $('#baths').val();
+        let sqft = $('#sqft').val();
+
+        if (!price) {
+            alert("Enter a price correction first!")
+            return;
+        }
+
+        let payload = {};
+        payload["price"] = price;
+        if (zip) {
+            payload["zip"] = zip;
+        }
+        if (beds) {
+            payload["beds"] = beds;
+        }
+        if (sqft) {
+            payload["sqft"] = sqft;
+        }
+        if (baths) {
+            payload["baths"] = baths;
+        }
+
+        $.post("/api/correction", payload,
+            function(data, status){
+                $('#result').hide();
+                $('p.final').show();
+                $('#correct_price').val("");
+                $('#zip-code').val("");
+                $('#beds').val("");
+                $('#baths').val("");
+                $('#sqft').val("");
+            });
+    }
+
+    function executeEstimate() {
+        let zip = $('#zip-code').val();
+        let beds = $('#beds').val();
+        let baths = $('#baths').val();
+        let sqft = $('#sqft').val();
+
+        if (!zip && !beds && !baths && !sqft) {
+            alert("Please Enter at Least one data point!")
+            return;
+        }
+
+        let payload = {};
+
+        if (zip) {
+            payload["zip"] = zip;
+        }
+        if (beds) {
+            payload["beds"] = beds;
+        }
+        if (sqft) {
+            payload["sqft"] = sqft;
+        }
+        if (baths) {
+            payload["baths"] = baths;
+        }
+
+        $.post("/api/estimate", payload,
+            function(data, status){
+                if (data.error) {
+                    $('p.final').html(data.error);
+                    $('p.final').show();
+                } else {
+                    $('#result').show();
+                    $('p.answer').html(`$${data.price.toFixed(2).toString()}`);
+                }
+            });
+    }
+</script>
