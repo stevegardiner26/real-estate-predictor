@@ -35,17 +35,20 @@ con.connect(function(err) {
                 res.send({error: "There is not enough info in the db to make an accurate prediction!"});
                 return;
             }
+            let hcount = 0;
             result.forEach((h) => {
-                if (!sqft || !h.sqft || h.sqft === "--") {
+                if (!sqft || !h.sqft) {
                     estimated_price += (parseInt(h.price));
+                    hcount++;
                 } else {
                     if (((parseInt(sqft) + 200) > parseInt(h.sqft)) && ((parseInt(sqft) - 200) < parseInt(h.sqft))) {
                         estimated_price += (parseInt(h.price))
+                        hcount++;
                     }
                 }
             });
 
-            estimated_price = estimated_price / result.length;
+            estimated_price = estimated_price / hcount;
 
             res.send({price: estimated_price});
         });
